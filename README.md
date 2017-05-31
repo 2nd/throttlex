@@ -35,23 +35,25 @@ in order to inspect user's rate. And user id must be integer for efficiency issu
 ###Examples:
   For user id 1, one extra request will be added to bucket, maximum accumulated requests number
   is 4, and every request will cost 1 token. First request will be permitted.
+
   ```elixir
   iex> Throttlex.check(1, 1, 2, 1)
   :ok
   ```
 
   Second request is permitted also since we allowed 2 requests maximum.
+
   ```elixir
   iex> Throttlex.check(1, 1, 2, 1)
   :ok
   ```
 
   If the third request is made within 1 second (the recovery time), it will return :error.
+
   ```elixir
   iex> Throttlex.check(1, 1, 2, 1)
   :error
   ```
-"""
 
 ## Testing
 
