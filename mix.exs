@@ -6,8 +6,8 @@ defmodule Throttlex.Mixfile do
      version: "0.0.1",
      elixir: "~> 1.4",
      name: "Throttlex",
-     description: description,
-     package: package,
+     description: description(),
+     package: package(),
      source_url: "https://github.com/2nd/throttlex",
      homepage_url: "https://github.com/2nd/throttlex",
      docs: [extras: ["README.md"]]]
