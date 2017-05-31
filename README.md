@@ -33,6 +33,7 @@ in order to inspect user's rate. And user id must be integer for efficiency issu
  - `cost`: costs of each request.
 
 **Examples**:
+
   For user id 1, one extra request will be added to bucket, maximum accumulated requests number
   is 4, and every request will cost 1 token. First request will be permitted.
 
