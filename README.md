@@ -26,13 +26,13 @@ The `Throttlex.check` function will return `:ok` if the user's request could be 
 Check user's rate, same rate_per_second, max_accumulated, cost should be passed to check functions
 in order to inspect user's rate. And user id must be integer for efficiency issue.
 
-###Arguments:
+**Arguments**:
  - `id`: id.
  - `rate_per_second`: how many rates should be added to bucket per second.
  - `max_accumulated`: maximum rates allowed in the bucket.
  - `cost`: costs of each request.
 
-###Examples:
+**Examples**:
   For user id 1, one extra request will be added to bucket, maximum accumulated requests number
   is 4, and every request will cost 1 token. First request will be permitted.
 
