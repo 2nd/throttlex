@@ -44,7 +44,7 @@ defmodule Throttlex do
   end
 
   @doc """
-  Check user's rate, same rate_per_second, max_accumulated, cost should be passed to check functions
+  Check user's rate, same `rate_per_second`, `max_accumulated` should be passed to check functions
   in order to inspect user's rate.
 
   ##Arguments:
