@@ -3,7 +3,7 @@ defmodule Throttlex.Mixfile do
 
   def project do
     [app: :throttlex,
-     version: "0.0.1",
+     version: "0.0.2",
      elixir: "~> 1.4",
      name: "Throttlex",
      deps: deps(),

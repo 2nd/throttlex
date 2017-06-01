@@ -4,24 +4,51 @@ defmodule Throttlex do
   """
 
   use GenServer
-  @table :throttlex_rate_limiter
+  
+  @name :throttlex
 
   @doc false
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, [], opts)
+  def start_link() do
+    GenServer.start_link(__MODULE__, [], [name: @name])
   end
 
   @doc false
-  def init(_args) do
-    :ets.new(@table, [:public, :named_table, :set, write_concurrency: true])
-    {:ok, nil}
+  def init(_args), do: {:ok, nil}
+
+  @doc false
+  def handle_call({:create, tables}, _from, _state) do
+    new_table(tables)
+    {:reply, nil, nil}
+  end
+
+  @spec new_table(atom | [atom]) :: nil
+  defp new_table([]), do: nil
+  defp new_table([name | names]) when is_list(names) do
+    :ets.new(name, [:public, :named_table, :set, write_concurrency: true, read_concurrency: true])
+    new_table(names)
+  end
+
+  defp new_table(name), do: new_table([name])
+
+  @doc """
+  Sometimes different endpoints or different routes would want their own rate-limiter with specified 
+  rates and cost, so this let you create multiple tables on startup, 
+
+  ##Examples:
+    iex> Throttlex.create_tables(:user_request)
+    nil
+  """
+  @spec create_tables(atom | [atom]) :: nil
+  def create_tables(names) do
+    GenServer.call(@name, {:create, names})
   end
 
   @doc """
   Check user's rate, same rate_per_second, max_accumulated, cost should be passed to check functions
-  in order to inspect user's rate. And user id must be integer for efficiency issue.
+  in order to inspect user's rate.
 
   ##Arguments:
+   - `table`: an atom representing bucket name.
    - `id`: id.
    - `rate_per_second`: how many rates should be added to bucket per second.
    - `max_accumulated`: maximum rates allowed in the bucket.
@@ -30,24 +57,24 @@ defmodule Throttlex do
   ##Examples:
     # For user id 1, one extra request will be added to bucket, maximum accumulated requests number
     is 4, and every request will cost 1 token. First request will be permitted.
-    iex> Throttlex.check(1, 1, 2, 1)
+    iex> Throttlex.check(:user_request, 1, 1, 2, 1)
     :ok
   
     # Second request is permitted also since we allowed 2 requests maximum.
-    iex> Throttlex.check(1, 1, 2, 1)
+    iex> Throttlex.check(:user_request, 1, 1, 2, 1)
     :ok
 
     # If the third request is made within 1 second (the recovery time), it will return :error.
-    iex> Throttlex.check(1, 1, 2, 1)
+    iex> Throttlex.check(:user_request, 1, 1, 2, 1)
     :error
   """
 
-  @spec check(integer, integer, integer, integer) :: :ok | :error
-  def check(id, rate_per_second, max_accumulated, cost) do
+  @spec check(atom, integer | binary | tuple | atom, integer, integer, integer) :: :ok | :error
+  def check(table, id, rate_per_second, max_accumulated, cost) do
     now = :erlang.system_time(:milli_seconds)
-    case :ets.lookup(@table, id) do
+    case :ets.lookup(table, id) do
       [] ->
-        :ets.insert(@table, {id, max_accumulated - cost, now})
+        :ets.insert(table, {id, max_accumulated - cost, now})
         :ok
       [{id, tokens_left, last_time}] ->
         tokens = tokens_left + (now - last_time)/1000 * rate_per_second
@@ -60,7 +87,7 @@ defmodule Throttlex do
         case tokens < cost do
           true -> :error
           false ->
-            :ets.update_element(@table, id, [{2, tokens - cost} ,{3, now}])
+            :ets.update_element(table, id, [{2, tokens - cost} ,{3, now}])
             :ok
         end
     end
