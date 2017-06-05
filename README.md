@@ -57,6 +57,16 @@ is 4, and every request will cost 1 token. First request will be permitted.
 Second request is permitted also since we allowed 2 requests maximum.
 If the third request is made within 1 second (the recovery time), it will return :error.
 
+```elixir
+iex> Throttlex.clear(:user_rate_web)
+:ok
+
+iex> Throttlex.clear([:user_rate_web, user_rate_ios])
+:ok
+```
+
+Clear given table/tables, will always return :ok.
+
 
 ## Concurrency
 
@@ -67,7 +77,7 @@ Ideally it would be nice to store configs(`rate_per_second`, `max_accumulated`) 
 2. store configs in ETS table, and do an extra lookup for config each time we call `check`.
 
 As we may have concurrent request go through `check`, GenServer will limit the performance to one process' ability, so `check` now requires all config
-variable each call.
+variable on each call.
 
 ## Testing
 

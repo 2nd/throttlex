@@ -35,4 +35,12 @@ defmodule ThrottlexTest do
     assert Throttlex.check(:route_two, 1, rate_per_second, max_accumulated, cost) == :error
   end
 
+  test "clear tables" do
+    tables = Enum.count(:ets.all())
+    Throttlex.create_tables([:t1, :t2, :t3])
+    Throttlex.clear(:t1)
+    Throttlex.clear([:t2, :t3])
+    assert Enum.count(:ets.all()) - tables == 3
+  end
+
 end

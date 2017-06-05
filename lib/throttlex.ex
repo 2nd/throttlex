@@ -6,6 +6,7 @@ defmodule Throttlex do
   use GenServer
   
   @name :throttlex
+  @default_opts [rate_per_second: 100, max_accumulated: 100, cost: 1]
 
   @doc false
   def start_link() do
@@ -93,4 +94,18 @@ defmodule Throttlex do
     end
   end
 
+  @doc """
+  Clear given ets table, this is often needed in tests
+  """
+  @spec clear(atom | [atom] ) :: :ok
+  def clear([]), do: :ok
+  def clear([table | tables]) do
+    clear(table)
+    clear(tables)
+  end
+
+  def clear(table) do
+    :ets.delete_all_objects(table)
+    :ok
+  end
 end
