@@ -2,24 +2,23 @@ defmodule Throttlex do
   @moduledoc """
   Throttlex implements leaky bucket algorithm for rate limiting, it uses erlang ETS for storage.
   """
-
   use GenServer
-  
-  @name :throttlex
-  @default_opts [rate_per_second: 100, max_accumulated: 100, cost: 1]
+
+  @buckets Application.get_env(:throttlex, :buckets)
+
+  def check(name, id), do: check(name, id, nil)
+
+  Enum.map(@buckets, fn {name, config} ->
+    [rate_per_second: rate, max_accumulated: max, cost: cost] = config
+    def check(unquote(name), id, cost) do
+      Throttlex.do_check(unquote(name), id, unquote(rate), unquote(max), cost || unquote(cost))
+    end
+  end)
 
   @doc false
   def start_link() do
-    GenServer.start_link(__MODULE__, [], [name: @name])
-  end
-
-  @doc false
-  def init(_args), do: {:ok, nil}
-
-  @doc false
-  def handle_call({:create, tables}, _from, _state) do
-    new_table(tables)
-    {:reply, nil, nil}
+    new_table(Keyword.keys(@buckets))
+    GenServer.start_link(__MODULE__, [], [name: __MODULE__])
   end
 
   @spec new_table(atom | [atom]) :: nil
@@ -31,19 +30,7 @@ defmodule Throttlex do
 
   defp new_table(name), do: new_table([name])
 
-  @doc """
-  Sometimes different endpoints or different routes would want their own rate-limiter with specified 
-  rates and cost, so this let you create multiple tables on startup, 
-
-  ##Examples:
-    iex> Throttlex.create_tables(:user_request)
-    nil
-  """
-  @spec create_tables(atom | [atom]) :: nil
-  def create_tables(names) do
-    GenServer.call(@name, {:create, names})
-  end
-
+  
   @doc """
   Check user's rate, same `rate_per_second`, `max_accumulated` should be passed to check functions
   in order to inspect user's rate.
@@ -70,8 +57,8 @@ defmodule Throttlex do
     :error
   """
 
-  @spec check(atom, integer | binary | tuple | atom, integer, integer, integer) :: :ok | :error
-  def check(table, id, rate_per_second, max_accumulated, cost) do
+  @spec do_check(atom, integer | binary | tuple | atom, integer, integer, integer) :: :ok | :error
+  def do_check(table, id, rate_per_second, max_accumulated, cost) do
     now = :erlang.system_time(:milli_seconds)
     case :ets.lookup(table, id) do
       [] ->
