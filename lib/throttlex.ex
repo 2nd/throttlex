@@ -99,6 +99,10 @@ defmodule Throttlex do
     :ok
   end
 
+  def clear_all() do
+    clear(Keyword.keys(@buckets))
+  end
+
   def inspect(table, id) do
     case :ets.lookup(table, id) do
       [] -> nil
