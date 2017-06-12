@@ -5,9 +5,9 @@ defmodule Throttlex do
   use GenServer
 
   @buckets Application.get_env(:throttlex, :buckets)
+  @verbose Application.get_env(:throttlex, :verbose) || false
 
   def check(name, id), do: check(name, id, nil)
-
   Enum.map(@buckets, fn {name, config} ->
     [rate_per_second: rate, max_accumulated: max, cost: cost] = config
     def check(unquote(name), id, cost) do
@@ -17,6 +17,10 @@ defmodule Throttlex do
 
   @doc false
   def start_link() do
+    case @verbose do
+      true -> IO.inspect @buckets
+      false -> nil
+    end
     new_table(Keyword.keys(@buckets))
     GenServer.start_link(__MODULE__, [], [name: __MODULE__])
   end
@@ -30,7 +34,6 @@ defmodule Throttlex do
 
   defp new_table(name), do: new_table([name])
 
-  
   @doc """
   Check user's rate, same `rate_per_second`, `max_accumulated` should be passed to check functions
   in order to inspect user's rate.
@@ -94,5 +97,12 @@ defmodule Throttlex do
   def clear(table) do
     :ets.delete_all_objects(table)
     :ok
+  end
+
+  def inspect(table, id) do
+    case :ets.lookup(table, id) do
+      [] -> nil
+      [{_id, tokens_left, _last_time}] -> tokens_left
+    end
   end
 end
