@@ -4,10 +4,11 @@ defmodule Throttlex do
   """
   use GenServer
 
-  @buckets Application.get_env(:throttlex, :buckets)
+  @buckets Application.get_env(:throttlex, :buckets) || []
   @verbose Application.get_env(:throttlex, :verbose) || false
 
   def check(name, id), do: check(name, id, nil)
+
   Enum.map(@buckets, fn {name, config} ->
     [rate_per_second: rate, max_accumulated: max, cost: cost] = config
     def check(unquote(name), id, cost) do
