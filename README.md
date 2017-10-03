@@ -7,7 +7,7 @@ Throttlex is an efficient Elixir rate limiter based on erlang ETS.
 
     ```elixir
     def deps do
-      [{:throttlex, "~> 0.0.1"}]
+      [{:throttlex, "~> 0.0.7"}]
     end
     ```
 
