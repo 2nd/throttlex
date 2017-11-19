@@ -16,6 +16,10 @@ defmodule Throttlex do
     end
   end)
 
+  def check(name, _id, _cost) do
+    raise "#{name} is not configured"
+  end
+
   @doc false
   def start_link() do
     case @verbose do
@@ -51,7 +55,7 @@ defmodule Throttlex do
     is 4, and every request will cost 1 token. First request will be permitted.
     iex> Throttlex.check(:user_request, 1, 1, 2, 1)
     :ok
-  
+
     # Second request is permitted also since we allowed 2 requests maximum.
     iex> Throttlex.check(:user_request, 1, 1, 2, 1)
     :ok
