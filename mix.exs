@@ -3,7 +3,7 @@ defmodule Throttlex.Mixfile do
 
   def project do
     [app: :throttlex,
-     version: "0.0.8",
+     version: "0.0.9",
      elixir: "~> 1.4",
      name: "Throttlex",
      deps: deps(),
@@ -28,7 +28,10 @@ defmodule Throttlex.Mixfile do
   end
 
   def deps do
-    [{:ex_doc, ">= 0.0.0", only: :dev}]
+    [
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:dialyxir, "~> 0.5.1", only: [:dev], runtime: false},
+    ]
   end
 
   defp package do

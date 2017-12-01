@@ -5,10 +5,13 @@ defmodule Throttlex do
   use GenServer
 
   @buckets Application.get_env(:throttlex, :buckets) || []
-  @verbose Application.get_env(:throttlex, :verbose) || false
 
+  @type key :: integer | binary | tuple | atom
+
+  @spec check(atom, key) :: :ok | :error
   def check(name, id), do: check(name, id, nil)
 
+  @spec check(atom, key, integer | nil) :: :ok | :error
   Enum.map(@buckets, fn {name, config} ->
     [rate_per_second: rate, max_accumulated: max, cost: cost] = config
     def check(unquote(name), id, cost) do
@@ -22,22 +25,19 @@ defmodule Throttlex do
 
   @doc false
   def start_link() do
-    case @verbose do
-      true -> IO.inspect @buckets
-      false -> nil
+    if Application.get_env(:throttlex, :verbose, false) == true do
+      IO.inspect @buckets
     end
     new_table(Keyword.keys(@buckets))
     GenServer.start_link(__MODULE__, [], [name: __MODULE__])
   end
 
-  @spec new_table(atom | [atom]) :: nil
+  @spec new_table([atom]) :: nil
   defp new_table([]), do: nil
-  defp new_table([name | names]) when is_list(names) do
+  defp new_table([name | names]) do
     :ets.new(name, [:public, :named_table, :set, write_concurrency: true, read_concurrency: true])
     new_table(names)
   end
-
-  defp new_table(name), do: new_table([name])
 
   @doc """
   Check user's rate, same `rate_per_second`, `max_accumulated` should be passed to check functions
@@ -65,7 +65,7 @@ defmodule Throttlex do
     :error
   """
 
-  @spec do_check(atom, integer | binary | tuple | atom, integer, integer, integer) :: :ok | :error
+  @spec do_check(atom, key, integer, integer, integer) :: :ok | :error
   def do_check(table, id, rate_per_second, max_accumulated, cost) do
     now = :erlang.system_time(:milli_seconds)
     case :ets.lookup(table, id) do

@@ -1,0 +1,5 @@
+/*.ez
+.DS_Store
+deps/
+/_build
+doc/
